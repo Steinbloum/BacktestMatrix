@@ -1,3 +1,4 @@
+from re import escape
 from ta.volume import money_flow_index
 from ta.trend import ema_indicator, macd, EMAIndicator, macd_signal
 from ta.volatility import (
@@ -136,6 +137,30 @@ class Bot_manager:
             r.word(include_parts_of_speech=["adjectives"]),
         )
         return bot.name
+
+    def init_history(self,bot):
+        """Initalises the trade history Dataframe"""
+        df = pd.DataFrame(
+            {
+                "Date": bot.sim.get_last("Date"),
+                "price": bot.sim.get_last("close"),
+                "size": None,
+                "value": None,
+                "side": None,
+                "motive": "INIT",
+                "pnl": None,
+                "fees": None,
+                "balance": bot.balance,
+                "trade_count": 0,
+                "position side": None,
+            },
+            index=[0],
+        )
+        return df
+
+
+
+
 
 c = Constructor()
 d = Dataframe_manager()
