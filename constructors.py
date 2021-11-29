@@ -78,8 +78,44 @@ class Constructor:
             # print("NO DATA")
             return False
 
+    def add_to_json(self, json_file, new_config, bot_type):
+        ls = []
+        with open(json_file, "r") as file:
+            if os.stat(json_file).st_size == 0:
+                ls.append(new_config)
+                print("appending config")
+                with open(json_file, "w") as file:
+                    json.dump(json.dumps(ls), file)
+                    print("config stored")
+                    return new_config
+            else:
+                stock = json.load(file)
+                ls = json.loads(stock)
+                for item in ls:
+                    print(item)
+                    try:
+                        item[bot_type]["preset"] == new_config[bot_type]["preset"]
+                    except KeyError:
+                        ls.append(new_config)
+                        print("appending config")
+                        with open(json_file, "w") as file:
+                            json.dump(json.dumps(ls), file)
+                            print("config stored")
+                            break
+                    if item[bot_type]["preset"] == new_config[bot_type]["preset"]:
+                        print("preset already stored")
+                    else:
+                        ls.append(new_config)
+                        print("appending config")
+                        with open(json_file, "w") as file:
+                            json.dump(json.dumps(ls), file)
+                            print("config stored")
+                            break
+
+
 class Dataframe_manager:
-    '''Everything that is relative to dataframe operations'''
+    """Everything that is relative to dataframe operations"""
+
     def __init__(self):
         pass
 
@@ -88,13 +124,13 @@ class Dataframe_manager:
         path_to_raw_file = c.get_path_to_raw_file(call_name)
         if path_to_raw_file:
             df = pd.read_csv(path_to_raw_file, index_col=0)
-            df['Date'] = pd.to_datetime(df['Date'])
+            df["Date"] = pd.to_datetime(df["Date"])
             return df
         else:
             return False
 
-    def resize_df(self, df, size, random_start = True):
-        '''resizes the DF to the size and returns a DF with a random start if True'''
+    def resize_df(self, df, size, random_start=True):
+        """resizes the DF to the size and returns a DF with a random start if True"""
         if len(df) < size:
             return False
         else:
@@ -102,8 +138,8 @@ class Dataframe_manager:
                 df = df.iloc[-size:]
                 return df
             if random:
-                rand = random.randrange(3000,len(df))
-                df = df.iloc[-rand:-rand+size]
+                rand = random.randrange(3000, len(df))
+                df = df.iloc[-rand : -rand + size]
                 return df
 
     def apply_indics(self, df):
@@ -125,12 +161,15 @@ class Dataframe_manager:
         df["EMA200"] = ema_indicator(df.close, window=200)
         return df
 
+
 class Bot_manager:
-    '''everything relative to the bot management'''
+    """everything relative to the bot management"""
+
     pass
+
     def __init__(self):
         pass
-    
+
     def set_bot_name(self, bot):
         bot.name = "{}_the_{}".format(
             names.get_first_name(gender="female"),
@@ -138,7 +177,7 @@ class Bot_manager:
         )
         return bot.name
 
-    def init_history(self,bot):
+    def init_history(self, bot):
         """Initalises the trade history Dataframe"""
         df = pd.DataFrame(
             {
@@ -158,11 +197,156 @@ class Bot_manager:
         )
         return df
 
+    def execute_order(self, bot, order):
+        """Appends position to dict, makes operations on the balance and
+        stores in the trade history"""
+        fees = self.get_fees(order["value"], bot.params["order_type"])
 
+        if order["side"] == "buy":
+            bot.balance -= fees
+            bot.balance -= order["value"]
+            bot.position["value"] -= order["value"]
+            bot.position["size"] += order["size"]
+            bot.position["fees"] = fees
 
+            return {
+                "value": order["value"],
+                "size": order["size"],
+                "fees": fees,
+                "price": order["price"],
+                "motive": order["motive"],
+                "side": order["side"],
+            }
+        else:
+            bot.balance -= fees
+            bot.balance += order["value"]
+            bot.position["value"] += order["value"]
+            bot.position["size"] -= order["size"]
+            bot.position["fees"] = fees
+            return {
+                "value": order["value"],
+                "size": order["size"],
+                "fees": fees,
+                "price": order["price"],
+                "motive": order["motive"],
+                "side": order["side"],
+            }
+
+    def store_transaction(self, bot, order):
+
+        date = bot.sim.df["Date"]
+        price = order["price"]
+        if order["size"] < 0:
+            size = -order["size"]
+        else:
+            size = order["size"]
+
+        if order["value"] < 0:
+            value = -order["value"]
+        else:
+            value = order["value"]
+        side = order["side"]
+        motive = order["motive"]
+
+        if bot.position["size"] > 0:
+            balance = bot.balance + order["value"]
+        elif bot.position["size"] < 0:
+            balance = bot.balance - order["value"]
+        else:
+            balance = bot.balance
+        trade_count = bot.trade_count
+        position_side = bot.position["side"]
+        fees = order["fees"]
+        if motive == "open":
+            # print("motive is open, no pnl")
+            pnl = None
+        else:
+            df = bot.trade_history.loc[
+                bot.trade_history["trade_count"] == bot.trade_count
+            ]
+            # print(df)
+            if bot.position["side"] == "long":
+                pnl = order["value"] - df["value"].iloc[0]
+            else:
+                pnl = df["value"].iloc[0] - order["value"]
+        ls = [
+            date,
+            price,
+            size,
+            value,
+            side,
+            motive,
+            pnl,
+            fees,
+            balance,
+            trade_count,
+            position_side,
+        ]
+        bot.trade_history.loc[len(bot.trade_history)] = ls
+        if bot.position["size"] == 0:
+            self.close_position(self)
+
+    def get_fees(self, amount, order_type):
+        if order_type == "market":
+            fees = amount * 0.0004
+        else:
+            fees = amount * 0.0002
+        if fees < 0:
+            fees *= -1
+        return fees
+
+    def open_position(self, bot, side):
+        """initialiases the dict for bot.position, adds 1 to the trade count"""
+        bot.trade_count += 1
+        bot.position = {
+            "trade count": bot.trade_count,
+            "side": side,
+            "value": 0,
+            "size": 0,
+        }
+        print(bot.position)
+        input("I entered")
+
+    def close_position(self, bot):
+        bot.position = False
+        bot.orders = False
+
+    def load_attributes(self, config_file, style, preset):
+        with open(config_file, "r") as jsonfile:
+            configs = json.load(jsonfile)
+            configs = json.loads(configs)
+            for item in configs:
+                # print(item)
+                for key, value in item.items():
+                    if style == key:
+                        if value["preset"] == preset:
+                            print("FOUND PRESET")
+                            return value
+                        else:
+                            print("WARNING NO CONFIG FOUND")
+                            return False
+
+    def create_config(self, config_file, bot, save=True):
+        """set the paramters, return a dict to append to json"""
+        """COMMENT THE INIT SECTION OF THE SUBBOT BEFORE RUNNING"""
+
+        params = bot.get_params_dict()
+        print(params)
+        for key, value in params[bot.style].items():
+            if key != "preset":
+                if not value:
+                    params[bot.style][key] = input(
+                        "enter the param for {}\n".format(key)
+                    )
+        if save:
+            c.add_to_json(config_file, params, bot.style)
+        return params
+
+    def update_position_value(self, bot):
+        if bot.position:
+            bot.position["value"] == bot.position["size"] * bot.sim.df["close"]
 
 
 c = Constructor()
 d = Dataframe_manager()
 b = Bot_manager()
-

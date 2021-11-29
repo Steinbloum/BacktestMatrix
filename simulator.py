@@ -18,10 +18,8 @@ class Simulator:
         io.print_bull("sim {} loaded".format(self.name))
 
     def update_df(self, row):
-        self.df = self.raw_df.iloc[row]
+        self.df = self.raw_df.iloc[row].fillna(False)
         return self.df
 
     def get_last(self, var):
         return self.df[var]
-
-sim = Simulator('BTCUSDT5m', 5000)
