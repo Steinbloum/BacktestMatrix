@@ -1,1 +1,1 @@
-"[{\"testbot\": {\"preset\": \"standard\", \"trade amount\": 0.5, \"trigger_sl\": 0.9, \"ema\": [\"EMA25\"], \"bias\": \"neutral\", \"order_type\": \"limit\", \"charting options\": [\"EMA25\"]}}]"
+"[{\"testbot\": {\"preset\": \"standard\", \"trade amount\": 1, \"trigger_sl\": 0.99, \"ema\": [\"EMA25\"], \"bias\": \"neutral\", \"order_type\": \"limit\", \"charting options\": [\"EMA25\"]}}]"

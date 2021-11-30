@@ -305,7 +305,6 @@ class Bot_manager:
             "size": 0,
         }
         print(bot.position)
-        input("I entered")
 
     def close_position(self, bot):
         bot.position = False

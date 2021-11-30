@@ -68,10 +68,43 @@ tst = Testbot(sim, "testbot", "standard")
 # print(bao.balance)
 # print(bao.trade_history)
 
-for n in range(5000):
-    print(n)
+
+for n in range(2000):
     tst.sim.update_df(n)
-    # print(tst.sim.df)
+    print(n)
     tst.run_main()
-    print(tst.trade_history)
-    print(tst.orders)
+    print("H{} L{}".format(tst.sim.df["high"], tst.sim.df["low"]))
+    print("pos is {}".format(tst.position))
+
+    if not tst.position:
+        if tst.orders:
+            for order in tst.orders:
+                if tst.sim.df["low"] < order["price"] < tst.sim.df["high"]:
+                    # print("###########################IM IN RANGE")
+                    # print(order)
+                    b.open_position(tst, order["pos_side"])
+                    b.store_transaction(tst, b.execute_order(tst, order))
+                    # print(tst.position)
+                    # print(tst.trade_history)
+                    # input()
+    elif tst.position:
+        if tst.sim.df["low"] < tst.orders["stop"]["price"] < tst.sim.df["high"]:
+            # print("pos val is {}".format(tst.position["value"]))
+
+            b.store_transaction(tst, b.execute_order(tst, tst.orders["stop"]))
+            b.close_position(tst)
+
+            # print("i stoped")
+            # print(tst.trade_history)
+            # print(tst.position)
+
+        elif tst.sim.df["low"] < tst.orders["tp"]["price"] < tst.sim.df["high"]:
+            # print("pos val is {}".format(tst.position["value"]))
+            b.store_transaction(tst, b.execute_order(tst, tst.orders["tp"]))
+            # print("balance is {}".format(tst.balance))
+            # print(tst.position)
+            # print("i tped")
+            b.close_position(tst)
+            # input()
+print(tst.trade_history)
+tst.trade_history.to_csv("tests/test_trade_hist.csv")
