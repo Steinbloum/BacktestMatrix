@@ -1,5 +1,6 @@
 from bot import Bot
 from constructors import b
+from simulator import Simulator
 
 
 class Testbot(Bot):
@@ -8,6 +9,8 @@ class Testbot(Bot):
         self.params = b.load_attributes("bot_config.json", self.style, self.preset)
 
     def set_orders(self):
+
+        """returns the order list or dict"""
         orders = {}
         if not self.position:
             open_long = {
@@ -27,7 +30,7 @@ class Testbot(Bot):
                 "size": self.balance
                 * self.params["trade amount"]
                 / self.sim.df["bolup"],
-                "side": "short",
+                "side": "sell",
                 "motive": "open",
                 "pos_side": "short",
             }
@@ -81,8 +84,7 @@ class Testbot(Bot):
         b.update_position_value(self)
         if self.sim.df["bolup"]:
             self.orders = self.set_orders()
-            # print(self.orders)
-            # self.run_bot()
+            self.run_bot()
 
     def get_params_dict(self):
         params_dict = {
@@ -93,10 +95,12 @@ class Testbot(Bot):
                 "ema": ["EMA25"],
                 "bias": "neutral",
                 "order_type": "limit",
-                "charting options": ["EMA25"],
+                "charting options": ["bolup", "boldown"],
             }
         }
         return params_dict
 
 
-# b.create_config("bot_config.json", Testbot(sim, "testbot", "standard"))
+sim = Simulator("ETHUSDT1m", 5)
+
+b.create_config("bot_config.json", Testbot(sim, "testbot", "standard"))
