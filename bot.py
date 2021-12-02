@@ -18,18 +18,14 @@ class Bot:
     def run_bot(self):
         if not self.position:
             if self.orders:
-                # print(self.orders)
-                # input()
                 if type(self.orders) == list:
-                    # print("i'm a list")
-                    # input()
                     for order in self.orders:
                         if self.sim.df["low"] < order["price"] < self.sim.df["high"]:
                             b.open_position(self, order["pos_side"])
                             b.store_transaction(self, b.execute_order(self, order))
                             break
-        if type(self.orders) is dict:
-            # print("i'm a dict")
+
+        elif type(self.orders) is dict:
             if self.sim.df["low"] < self.orders["stop"]["price"] < self.sim.df["high"]:
                 b.store_transaction(self, b.execute_order(self, self.orders["stop"]))
                 b.close_position(self)

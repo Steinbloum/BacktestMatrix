@@ -1,18 +1,22 @@
 from bot import Bot
 from constructors import b
-from simulator import Simulator
+from Io import Io
+
+io = Io()
 
 
 class Testbot(Bot):
     def __init__(self, sim, style, preset, balance=1000):
         super().__init__(sim, style, preset, balance=balance)
         self.params = b.load_attributes("bot_config.json", self.style, self.preset)
+        io.print_statement("{} is awake".format(self.name))
 
     def set_orders(self):
 
         """returns the order list or dict"""
         orders = {}
         if not self.position:
+
             open_long = {
                 "price": self.sim.df["boldown"],
                 "value": self.balance * self.params["trade amount"],
@@ -101,6 +105,6 @@ class Testbot(Bot):
         return params_dict
 
 
-sim = Simulator("ETHUSDT1m", 5)
+# sim = Simulator("ETHUSDT1m", 5)
 
-b.create_config("bot_config.json", Testbot(sim, "testbot", "standard"))
+# b.create_config("bot_config.json", Testbot(sim, "testbot", "standard"))

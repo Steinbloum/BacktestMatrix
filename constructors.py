@@ -20,6 +20,7 @@ import random
 from Io import io
 from datetime import datetime
 
+
 r = RandomWord()
 
 path_to_data = os.getenv("PATHTODATA")
@@ -199,8 +200,7 @@ class Bot_manager:
         return df
 
     def execute_order(self, bot, order):
-        """Appends position to dict, makes operations on the balance and
-        stores in the trade history"""
+        """Appends position to dict, makes operations on the balance"""
         fees = self.get_fees(order["value"], bot.params["order_type"])
 
         if order["side"] == "buy":
@@ -270,7 +270,11 @@ class Bot_manager:
                 pnl = value - df["value"].iloc[0]
             else:
                 pnl = df["value"].iloc[0] - value
-        if order["motive"] == "tp" or order["motive"] == "stop":
+        if (
+            order["motive"] == "tp"
+            or order["motive"] == "stop"
+            or order["motive"] == "close"
+        ):
             balance = bot.balance
         ls = [
             date,
@@ -348,31 +352,65 @@ class Bot_manager:
         if bot.position:
             bot.position["value"] == bot.position["size"] * bot.sim.df["close"]
 
+    def close_all(self, bot, path):
+        if bot.position:
+            # print(bot.position)
+            # print("balance : {}".format(bot.balance))
+            # input()
+            print("closing position")
+            if bot.position["side"] == "long":
+                side = "sell"
+                size = bot.position["size"]
+
+            elif bot.position["side"] == "short":
+                side = "buy"
+                size = bot.position["size"]
+            df = bot.trade_history.loc[
+                bot.trade_history["trade_count"] == bot.trade_count
+            ]
+            close = {
+                "price": bot.sim.df["close"],
+                "value": bot.sim.df["close"]
+                * float(df["size"].loc[df["motive"] == "open"]),
+                "size": bot.position["size"],
+                "side": side,
+                "motive": "close",
+            }
+
+            self.store_transaction(bot, self.execute_order(bot, close))
+            self.close_position(bot)
+        bot.trade_history.to_csv("{}/{}/trade_history.csv".format(path, bot.name))
+
 
 class Plotter:
     def __init__(self) -> None:
         pass
 
-    def perf_chart(
-        self, trade_hist, raw, max_klines, bot_name, asset, initial_wallet, path
-    ):
+    def perf_chart(self, bot, matrix):
         """make a line chart asset perf vs bot perf"""
-        td = trade_hist[trade_hist["motive"].isin(["tp", "stop", "close"])]
-        raw = raw[["Date", "close"]]
-        raw = raw.iloc[-max_klines:]
+        initial_wallet = bot.trade_history["balance"].loc[
+            bot.trade_history["motive"] == "INIT"
+        ]
+        td = bot.trade_history[
+            bot.trade_history["motive"].isin(["tp", "stop", "close"])
+        ]
+        raw = bot.sim.raw_df[["Date", "close"]]
+        raw = bot.sim.raw_df.iloc[-bot.sim.min_rows :]
         # print("making report for {}".format(bot_name))
         asset_start_price = raw["close"].iloc[0]
         asset_end_price = raw["close"].iloc[-1]
         asset_roi = round(asset_end_price / asset_start_price * 100 - 100, 2)
-        bot_roi = round(td["balance"].iloc[-1] / initial_wallet * 100 - 100, 2)
+
+        bot_roi = float(round((td["balance"].iloc[-1]) / initial_wallet * 100 - 100, 2))
+
         if bot_roi >= asset_roi:
             msg = "Good bot beat the market !"
         else:
             msg = "Bad bot did not outperform the market"
         fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(go.Scatter(x=raw["Date"], y=raw["close"], name=asset))
+        fig.add_trace(go.Scatter(x=raw["Date"], y=raw["close"], name=bot.sim.name))
         fig.add_trace(
-            go.Scatter(x=td["Date"], y=td["balance"], name=bot_name),
+            go.Scatter(x=td["Date"], y=td["balance"], name=bot.name),
             secondary_y=True,
         )
         fig.update_layout(
@@ -380,7 +418,9 @@ class Plotter:
         )
         fig.update_yaxes(title_text="<b>Asset price</b>", secondary_y=False)
         fig.update_yaxes(title_text="<b>Bot balance</b>", secondary_y=True)
-        fig.write_image("tests/perfo.png")
+        fig.write_image(
+            "{}/{}/{}_perfo.png".format(matrix.session_path, bot.name, bot.name)
+        )
 
     def get_chart_graph(
         self, df, start_index, end_index, trade_history, path, name, trade_count
@@ -410,9 +450,9 @@ class Plotter:
         roi = round(
             sum(trade_history["pnl"].dropna()) / trade_history["value"].iloc[0] * 100, 2
         )
-        if side == "SHORT":
-            value *= -1
-            roi *= -1
+        # if side == "SHORT":
+        #     value *= -1
+        #     roi *= -1
         fig.update_layout(
             xaxis_rangeslider_visible=False,
             showlegend=False,
@@ -440,16 +480,27 @@ class Plotter:
                 ),
             )
         )
+
         trade_history = None
-        fig.write_image("{}/{}.png".format(path, name))
-        print("writing to{}/{}.png".format(path, name))
+        fig.write_image("{}{}.png".format(path, name))
+        # print("writing to{}{}.png".format(path, name))
         return fig
 
     def make_chart_report(self, trade_history, raw_df, path):
         """Get the top 10 best trades and worst 10 to graph"""
-        top = trade_history["pnl"].sort_values(ascending=False).head(10).index.tolist()
+        top = (
+            trade_history["pnl"]
+            .sort_values(ascending=False)
+            .dropna()
+            .head(10)
+            .index.tolist()
+        )
         worst = (
-            trade_history["pnl"].sort_values(ascending=False).tail(10).index.tolist()
+            trade_history["pnl"]
+            .sort_values(ascending=False)
+            .dropna()
+            .tail(10)
+            .index.tolist()
         )
         toppairs = []
         worstpairs = []
@@ -464,9 +515,7 @@ class Plotter:
                 trade_history["Date"].iloc[indexes[0]],
                 trade_history["Date"].iloc[indexes[1]],
             )
-            # print(idx)
             trade_count = trade_history["trade_count"].iloc[indexes[0]]
-            # print("tradect {}".format(trade_count))
             self.get_chart_graph(
                 raw_df,
                 idx["start"],
@@ -565,8 +614,103 @@ class Sim_manager:
         return {"coin": coin, "pair": pair, "tf": tf}
 
 
+class Matrix_manager:
+    def __init__(self) -> None:
+        pass
+
+    def create_name(self):
+        name = "{}_{}".format(
+            r.word(include_parts_of_speech=["adjectives"]),
+            r.word(include_parts_of_speech=["nouns"]),
+        )
+        return name
+
+    def init_session(self, matrix):
+        """names the sessiona and create the dir"""
+        matrix.name = self.create_name()
+        matrix.session_path = c.create_dir("reports/{}".format(matrix.name))
+        io.print_statement("session {} initiated".format(matrix.name))
+
+    def get_session_results(self, matrix, bot_list):
+
+        df = pd.DataFrame(
+            columns=[
+                "name",
+                "time_span",
+                "trades",
+                "won",
+                "win_rate",
+                "pnl",
+                "roi",
+                "fees",
+                "adj_pnl",
+                "adj_roi",
+                "ticker",
+                "tf",
+                "bot_type",
+                "bot preset",
+            ]
+        )
+
+        for bot in bot_list:
+            td = bot.trade_history
+            name = bot.name
+            # print(name)
+            time_span = bot.sim.raw_df["Date"].iloc[-1] - bot.sim.raw_df["Date"].iloc[0]
+            trades = max(td["trade_count"])
+            # print("i made {} trades".format(trades))
+            won = len(td["pnl"].loc[td["pnl"] > 0])
+            # print("i won {} trades".format(won))
+            win_rate = won / trades * 100
+            # print("it is a {} win rate".format(win_rate))
+            pnl = sum(td["pnl"].dropna())
+            # print("mypnl is {}".format(pnl))
+            roi = pnl / (td["balance"].iloc[0]) * 100
+            # print("my roi is {}".format(roi))
+            fees = sum(td["pnl"].dropna())
+            # print(time_span)
+            adj_pnl = pnl - fees
+            adj_roi = roi = pnl / (td["balance"].iloc[0]) * 100
+            ticker = bot.sim.ticker
+            tf = bot.sim.tf
+            bot_type = bot.style
+            bot_preset = bot.preset
+            df_bot = pd.DataFrame(
+                {
+                    "name": name,
+                    "time_span": time_span,
+                    "trades": trades,
+                    "won": won,
+                    "win_rate": win_rate,
+                    "pnl": pnl,
+                    "roi": roi,
+                    "fees": fees,
+                    "adj_pnl": adj_pnl,
+                    "adj_roi": adj_roi,
+                    "ticker": ticker,
+                    "tf": tf,
+                    "bot_type": bot_type,
+                    "bot preset": bot_preset,
+                },
+                index=[0],
+            )
+            df.append(df_bot, ignore_index=True)
+        df = df.round(
+            {
+                "win_rate": 2,
+                "pnl": 2,
+                "roi": 2,
+                "fees": 2,
+                "adjusted_pnl": 2,
+                "ajusted_roi": 2,
+            }
+        )
+        print(df)
+
+
 c = Constructor()
 d = Dataframe_manager()
 b = Bot_manager()
 p = Plotter()
 s = Sim_manager()
+m = Matrix_manager()
