@@ -569,12 +569,20 @@ class Sim_manager:
     def __init__(self) -> None:
         pass
 
-    def get_random_sim_list(self, amount, max_klines, conditions=True):
+    def get_random_sim_list(
+        self,
+        amount,
+        max_klines,
+        conditions=True,
+        exclude_stablecoins=False,
+        only_stablecoins=False,
+    ):
         ls = []
         while len(ls) < amount:
             for n in range(amount):
                 lssimis = random.choice(os.listdir(path_to_data))
                 tfs = random.choice(["1m", "5m", "15m", "30m", "1h", "4h", "1d"])
+                stblcoins = ["USDC", "BUSD", "TUSD"]
                 pair = lssimis + tfs
                 if not pair in ls:
                     if conditions:
@@ -706,6 +714,7 @@ class Matrix_manager:
             }
         )
         print(df)
+        df.to_csv("{}/{}".format(matrix.session_path, "report.csv"))
 
 
 c = Constructor()

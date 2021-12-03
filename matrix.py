@@ -1,5 +1,5 @@
 from simulator import Simulator
-from subbots import Testbot
+from subbots import Bolbot
 from constructors import c, d, p, b, s, m
 from Io import io
 

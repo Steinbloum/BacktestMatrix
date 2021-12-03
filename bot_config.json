@@ -1,1 +1,1 @@
-"[{\"testbot\": {\"preset\": \"standard\", \"trade amount\": 0.5, \"trigger_sl\": 0.9, \"ema\": [\"EMA25\"], \"bias\": \"neutral\", \"order_type\": \"limit\", \"charting options\": [\"bolup\", \"boldown\"]}}]"
+"[{\"Bolbot\": {\"preset\": \"standard\", \"trade amount\": 0.5, \"trigger_sl\": 0.95, \"ema\": [\"EMA25\"], \"bias\": \"neutral\", \"order_type\": \"limit\", \"charting options\": [\"bolup\", \"boldown\"]}}]"
