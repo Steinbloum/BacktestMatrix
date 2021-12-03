@@ -326,7 +326,7 @@ class Bot_manager:
                 for key, value in item.items():
                     if style == key:
                         if value["preset"] == preset:
-                            print("FOUND PRESET")
+                            # print("FOUND PRESET")
                             return value
                         else:
                             print("WARNING NO CONFIG FOUND")

@@ -43,3 +43,4 @@ class Matrix:
                 "{}/{}/".format(self.session_path, bot.name),
             )
         m.get_session_results(self, self.bots)
+        io.print_statement("SESSION {} TERMINATED".format(self.name))

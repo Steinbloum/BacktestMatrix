@@ -1,6 +1,5 @@
 from os import path
-from constructors import c, d, b
-from simulator import Simulator
+from constructors import b
 
 
 class Bot:

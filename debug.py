@@ -1,5 +1,5 @@
-from subbots import Bolbot
-from matrix import Matrix
+# from subbots import Bolbot
+# from matrix import Matrix
 
 # rows = 2000
 # sim = Simulator(s.get_random_sim_list(1, rows)[0], rows)
@@ -17,8 +17,8 @@ from matrix import Matrix
 # p.perf_chart(tst)
 # p.make_chart_report(tst.trade_history, tst.sim.raw_df, path="tests")
 
-botlist = [[Bolbot, "Bolbot", "standard"]]
-matrix = Matrix()
-matrix.run_sim(20, botlist, 20000)
+# botlist = [[Bolbot, "Bolbot", "standard"]]
+# matrix = Matrix()
+# matrix.run_sim(20, botlist, 20000)
 
-print(matrix.name)
+# print(matrix.name)
