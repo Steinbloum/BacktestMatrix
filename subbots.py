@@ -48,8 +48,22 @@ class Testbot(Bot):
 
             initial_value = float(df["value"].loc[df["motive"] == "open"])
             initial_price = float(df["price"].loc[df["motive"] == "open"])
-            stop_value = initial_value * self.params["trigger_sl"]
-            stop_price = stop_value * initial_price / initial_value
+
+            if self.position["side"] == "long":
+                stop_value = initial_value * self.params["trigger_sl"]
+                stop_price = stop_value / float(df["size"].loc[df["motive"] == "open"])
+            elif self.position["side"] == "short":
+                stop_value = initial_value * (1 - self.params["trigger_sl"] + 1)
+                stop_price = stop_value / float(df["size"].loc[df["motive"] == "open"])
+            # print("stop value is {}, stop price is {}".format(stop_value, stop_price))
+            # print(df)
+            # print(
+            #     "entry price is {}, stop price is {}".format(
+            #         df["price"].loc[df["motive"] == "open"],
+            #         stop_price,
+            #     )
+            # )
+            # input()
             if self.position["side"] == "long":
                 side = "sell"
             elif self.position["side"] == "short":
@@ -61,8 +75,9 @@ class Testbot(Bot):
                 "side": side,
                 "motive": "stop",
             }
-            # print("STOP is")
-            # print(stop)
+            # print("STOP is {}".format(stop))
+            # input()
+
             if self.position["side"] == "long":
                 tp_price = self.sim.df["bolup"]
                 side = "sell"

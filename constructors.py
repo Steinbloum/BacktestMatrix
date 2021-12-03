@@ -667,7 +667,7 @@ class Matrix_manager:
             # print("mypnl is {}".format(pnl))
             roi = pnl / (td["balance"].iloc[0]) * 100
             # print("my roi is {}".format(roi))
-            fees = sum(td["pnl"].dropna())
+            fees = sum(td["fees"].dropna())
             # print(time_span)
             adj_pnl = pnl - fees
             adj_roi = roi = pnl / (td["balance"].iloc[0]) * 100
@@ -694,7 +694,7 @@ class Matrix_manager:
                 },
                 index=[0],
             )
-            df.append(df_bot, ignore_index=True)
+            df = df.append(df_bot, ignore_index=True)
         df = df.round(
             {
                 "win_rate": 2,

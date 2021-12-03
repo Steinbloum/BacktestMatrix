@@ -23,9 +23,10 @@ class Bot:
                         if self.sim.df["low"] < order["price"] < self.sim.df["high"]:
                             b.open_position(self, order["pos_side"])
                             b.store_transaction(self, b.execute_order(self, order))
+                            self.set_orders()
                             break
 
-        elif type(self.orders) is dict:
+        if type(self.orders) is dict:
             if self.sim.df["low"] < self.orders["stop"]["price"] < self.sim.df["high"]:
                 b.store_transaction(self, b.execute_order(self, self.orders["stop"]))
                 b.close_position(self)
