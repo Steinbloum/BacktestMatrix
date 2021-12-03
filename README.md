@@ -14,7 +14,7 @@ PRIVATEAPI='YOUR PRIVATE KEY FOR BINANCE API' (not necessary if you don't want t
 PATHTODATA='THE PATH TOI THE DOWNLOADED DATA'
 
 
-run main.py, it's already set up fot a session with 20 sims, 2 bots, and 50k candles. 
+run main.py, it's already set up fot a session with 10 sims, 2 bots, and 20k candles. 
 this setup is quite long, you can tweak the numbers as you wish. 
 
 Once it's done go tchek the reports folder and enjoy data
