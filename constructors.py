@@ -1,3 +1,4 @@
+from itertools import groupby
 from re import escape
 from ta.volume import money_flow_index
 from ta.trend import ema_indicator, macd, EMAIndicator, macd_signal
@@ -424,7 +425,15 @@ class Plotter:
         )
 
     def get_chart_graph(
-        self, df, start_index, end_index, trade_history, path, name, trade_count
+        self,
+        df,
+        start_index,
+        end_index,
+        trade_history,
+        path,
+        name,
+        trade_count,
+        options=False,
     ):
 
         df = df.loc[start_index:end_index]
@@ -452,9 +461,7 @@ class Plotter:
         roi = round(
             sum(trade_history["pnl"].dropna()) / trade_history["value"].iloc[0] * 100, 2
         )
-        # if side == "SHORT":
-        #     value *= -1
-        #     roi *= -1
+
         fig.update_layout(
             xaxis_rangeslider_visible=False,
             showlegend=False,
@@ -484,13 +491,16 @@ class Plotter:
                 ),
             )
         )
+        if options:
+            for option in options:
+                fig.add_trace(go.Scatter(x=df["Date"], y=df[option], name=option)),
 
         trade_history = None
         fig.write_image("{}{}.png".format(path, name))
         # print("writing to{}{}.png".format(path, name))
         return fig
 
-    def make_chart_report(self, trade_history, raw_df, path):
+    def make_chart_report(self, trade_history, raw_df, path, bot, options=False):
         """Get the top 10 best trades and worst 10 to graph"""
         top = (
             trade_history["pnl"]
@@ -528,6 +538,7 @@ class Plotter:
                 trade_count=trade_count,
                 path=path,
                 name="top{}".format(n),
+                options=bot.params["charting options"],
             )
             fig = None
             n += 1
@@ -550,6 +561,7 @@ class Plotter:
                 trade_count=trade_count,
                 path=path,
                 name="worst{}".format(n),
+                options=bot.params["charting options"],
             )
             fig = None
             n += 1
@@ -567,6 +579,21 @@ class Plotter:
         endt = endt[0] + delta
 
         return {"start": stdt, "end": endt}
+
+    def make_simulation_histogram(self, results):
+
+        df = results
+        # fig = px.bar(df, x="ticker", y="adj_roi", color="bot_type", barmode="group")
+        # fig.show()
+        fig = go.Figure(
+            data=[
+                go.Bar(name="ROI", x=df["ticker"], y=df["adj_roi"]),
+                go.Bar(name="PNL", x=df["ticker"], y=df["adj_pnl"]),
+            ]
+        )
+        # Change the bar mode
+        fig.update_layout(barmode="group")
+        fig.show()
 
 
 class Sim_manager:
@@ -713,13 +740,14 @@ class Matrix_manager:
                 "pnl": 2,
                 "roi": 2,
                 "fees": 2,
-                "adjusted_pnl": 2,
-                "ajusted_roi": 2,
+                "adj_pnl": 2,
+                "adj_roi": 2,
             }
         )
         df = df.sort_values(by="adj_roi", ascending=False)
         print(df)
         df.to_csv("{}/{}".format(matrix.session_path, "report.csv"))
+        return df
 
 
 class Data_manager:

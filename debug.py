@@ -1,5 +1,7 @@
 # from subbots import Emabot, Bolbot
 # from matrix import Matrix
+from constructors import p
+import pandas as pd
 
 # rows = 2000
 # sim = Simulator(s.get_random_sim_list(1, rows)[0], rows)
@@ -22,3 +24,6 @@
 # matrix.run_sim(5, botlist, 10000)
 
 # print(matrix.name)
+
+# results = pd.read_csv("reports/tame_innocent/report.csv")
+# p.make_simulation_histogram(results)

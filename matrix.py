@@ -11,6 +11,7 @@ class Matrix:
         self.bots = []
         self.name = None
         self.session_path = None
+        self.session_results = None
 
     def init_sim(self, sim_amount, bot_list, candles_amount):
         sims = s.get_random_sim_list(sim_amount, candles_amount)
@@ -41,6 +42,7 @@ class Matrix:
                 bot.trade_history,
                 bot.sim.raw_df,
                 "{}/{}/".format(self.session_path, bot.name),
+                bot,
             )
-        m.get_session_results(self, self.bots)
+        self.session_results = m.get_session_results(self, self.bots)
         io.print_statement("SESSION {} TERMINATED".format(self.name))

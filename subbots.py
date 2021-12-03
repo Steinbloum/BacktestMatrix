@@ -260,6 +260,9 @@ class Emabot(Bot):
                 else:
                     self.trend = trend
                     self.trend_count = 0
+            else:
+                self.trend = None
+                self.trend_count = 0
 
             if (
                 self.trend == "bull"
@@ -302,33 +305,77 @@ class Emabot(Bot):
             return open_orders
 
         if self.position:
+            ls = []
+            for ema in self.params["emas"]:
+                ls.append(self.sim.df[ema])
+
+            if ls == list(np.sort(ls)[::-1]):
+                trend = "bull"
+                if trend == self.trend:
+                    self.trend_count += 1
+                else:
+                    self.trend = trend
+                    self.trend_count = 0
+            elif ls == list(np.sort(ls)):
+                trend = "bear"
+                if trend == self.trend:
+                    self.trend_count += 1
+                else:
+                    self.trend = trend
+                    self.trend_count = 0
+            else:
+                self.trend = None
+                self.trend_count = 0
+
             """set stop and tp here, for now only one TP is allowed, no partial TP"""
             df = self.trade_history.loc[
                 self.trade_history["trade_count"] == self.trade_count
             ]
 
-            initial_value = float(df["value"].loc[df["motive"] == "open"])
-            initial_price = float(df["price"].loc[df["motive"] == "open"])
+            # initial_value = float(df["value"].loc[df["motive"] == "open"])
+            # initial_price = float(df["price"].loc[df["motive"] == "open"])
 
             ########
             """Set the stop here, by default it's stopping when the value is inferior to what is set in the params"""
             ########
-
+            # print(df)
+            # input()
             if self.position["side"] == "long":
-                stop_value = initial_value * self.params["trigger_sl"]
-                stop_price = stop_value / float(df["size"].loc[df["motive"] == "open"])
+                if self.trend_count == 0:
+                    stop_price = self.sim.df["close"]
+                    stop_value = self.sim.df["close"] * self.position["size"]
+
+                else:
+                    stop_value = self.position["value"] * self.params["trigger_sl"]
+                    stop_price = stop_value / float(
+                        df["size"].loc[df["motive"] == "open"]
+                    )
                 side = "sell"
             elif self.position["side"] == "short":
-                stop_value = initial_value * (1 - self.params["trigger_sl"] + 1)
-                stop_price = stop_value / float(df["size"].loc[df["motive"] == "open"])
+                if self.trend_count == 0:
+                    stop_price = self.sim.df["close"]
+                    stop_value = self.sim.df["close"] * self.position["size"]
+                else:
+                    stop_value = self.position["value"] * (
+                        1 - self.params["trigger_sl"] + 1
+                    )
+                    stop_price = stop_value / float(
+                        df["size"].loc[df["motive"] == "open"]
+                    )
                 side = "buy"
             stop = {
                 "price": stop_price,
                 "value": stop_value,
-                "size": self.position["size"],
+                "size": -self.position["size"],
                 "side": side,
                 "motive": "stop",
             }
+            # print(stop)
+            # print(self.balance)
+            # print(self.position["value"])
+            # print("***---***")
+            # input()
+
             ########
             """Set the tp here"""
             ########
@@ -339,12 +386,24 @@ class Emabot(Bot):
                     - self.sim.df[self.params["emas"][int(self.params["tp_delta"][1])]]
                 ) * self.params["tp_multiplicator"]
                 tp_price = self.sim.df[self.params["emas"][0]] + delta
+                # print(
+                #     "i {}, EMA10:{}, EMA25:{}, tp : {}".format(
+                #         "long", self.sim.df["EMA10"], self.sim.df["EMA25"], tp_price
+                #     )
+                # )
+                # input()
             if self.position["side"] == "short":
                 delta = (
-                    self.sim.df[self.params["emas"][1]]
-                    - self.sim.df[self.params["emas"][0]]
+                    self.sim.df[self.params["emas"][int(self.params["tp_delta"][1])]]
+                    - self.sim.df[self.params["emas"][int(self.params["tp_delta"][0])]]
                 ) * 2
                 tp_price = self.sim.df[self.params["emas"][0]] - delta
+                # print(
+                #     "i {}, EMA10:{}, EMA25:{}, tp : {}".format(
+                #         "short", self.sim.df["EMA10"], self.sim.df["EMA25"], tp_price
+                #     )
+                # )
+                # input()
             tp_value = float(df["size"].loc[df["motive"] == "open"]) * tp_price
             size = -self.position["size"]
             tp = {
