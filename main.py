@@ -1,7 +1,9 @@
-from subbots import Bolbot
+from subbots import Bolbot, Emabot
 from matrix import Matrix
 
 
-botlist = [[Bolbot, "Bolbot", "standard"]]
+botlist = [[Emabot, "Emabot", "std"], [Bolbot, "Bolbot", "standard"]]
 matrix = Matrix()
-matrix.run_sim(20, botlist, 50000)
+matrix.run_sim(5, botlist, 10000)
+
+print(matrix.name)

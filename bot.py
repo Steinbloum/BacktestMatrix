@@ -22,6 +22,10 @@ class Bot:
                         if self.sim.df["low"] < order["price"] < self.sim.df["high"]:
                             b.open_position(self, order["pos_side"])
                             b.store_transaction(self, b.execute_order(self, order))
+                            # print("i entered")
+                            # print(self.position)
+                            # print(self.trade_history)
+                            # input()
                             self.set_orders()
                             break
 

@@ -448,6 +448,7 @@ class Plotter:
         side = trade_history["position side"].iloc[0].upper()
         value = round(trade_history["value"].iloc[0], 2)
         pnl = round(sum(trade_history["pnl"].dropna()), 2)
+        motive = trade_history["motive"].iloc[-1].upper()
         roi = round(
             sum(trade_history["pnl"].dropna()) / trade_history["value"].iloc[0] * 100, 2
         )
@@ -457,7 +458,9 @@ class Plotter:
         fig.update_layout(
             xaxis_rangeslider_visible=False,
             showlegend=False,
-            title="{} - Value : {}$, PNL : {}, ROI : {}%".format(side, value, pnl, roi),
+            title="{} - Value : {}$, PNL : {}, ROI : {}% exit on : {}".format(
+                side, value, pnl, roi, motive
+            ),
         )
 
         fig.add_trace(
@@ -591,7 +594,7 @@ class Sim_manager:
                             ls.append(pair)
                         else:
                             io.print_warning("NO DATA FOR {}".format(pair))
-        print(ls)
+        # print(ls)
         return ls
 
     def check_for_data(self, call_name, max_klines):
@@ -714,6 +717,7 @@ class Matrix_manager:
                 "ajusted_roi": 2,
             }
         )
+        df = df.sort_values(by="adj_roi", ascending=False)
         print(df)
         df.to_csv("{}/{}".format(matrix.session_path, "report.csv"))
 

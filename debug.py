@@ -1,4 +1,4 @@
-# from subbots import Bolbot
+# from subbots import Emabot, Bolbot
 # from matrix import Matrix
 
 # rows = 2000
@@ -17,8 +17,8 @@
 # p.perf_chart(tst)
 # p.make_chart_report(tst.trade_history, tst.sim.raw_df, path="tests")
 
-# botlist = [[Bolbot, "Bolbot", "standard"]]
+# botlist = [[Emabot, "Emabot", "std"], [Bolbot, "Bolbot", "standard"]]
 # matrix = Matrix()
-# matrix.run_sim(20, botlist, 20000)
+# matrix.run_sim(5, botlist, 10000)
 
 # print(matrix.name)
