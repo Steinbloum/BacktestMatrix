@@ -18,6 +18,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import random
 from Io import io
+from binance.client import Client
 from datetime import datetime
 
 
@@ -715,6 +716,56 @@ class Matrix_manager:
         )
         print(df)
         df.to_csv("{}/{}".format(matrix.session_path, "report.csv"))
+
+
+class Data_manager:
+    def __init__(self) -> None:
+        pass
+
+    def get_historical_klines_from_binance(
+        self, ticker, tf, start_date, end_date="today", to_csv=True, overwrite=False
+    ):
+        client = Client(os.getenv("PUBLICAPI"), os.getenv("PRIVATEAPI"))
+        if not overwrite:
+            if os.path.isdir("{}/{}/{}".format(path_to_data, ticker, tf)):
+                print("data already stored")
+                return ""
+        print("Getting klines for {}-{}".format(ticker, tf))
+        klines = client.get_historical_klines(ticker, tf, start_date, end_date)
+        print("processing {} klines.".format(len(klines)))
+
+        ls = []
+        for item in klines:
+            item = item[0:6]
+            ls.append(item)
+        df = pd.DataFrame(
+            ls, columns=["Date", "open", "high", "low", "close", "volume"]
+        )
+        df["Date"] = pd.to_datetime(df["Date"], unit="ms")
+        df = df.set_index("Date")
+        df = df.astype("float")
+        df = df.reset_index()
+        if to_csv:
+            if overwrite:
+                outdir = "{}/{}/{}".format(path_to_data, ticker, tf)
+                if not os.path.exists(outdir):
+                    os.makedirs(outdir)
+                print("creating csv")
+                df.to_csv(
+                    "{}/{}/{}/{}_{}.csv".format(
+                        path_to_data,
+                        ticker,
+                        tf,
+                        ticker,
+                        tf,
+                    )
+                )
+            elif not overwrite:
+                if os.path.isdir("{}/{}/{}".format(path_to_data, ticker, tf)):
+                    print("data already stored")
+
+            print("All done")
+        return df
 
 
 c = Constructor()
