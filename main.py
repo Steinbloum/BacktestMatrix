@@ -4,6 +4,6 @@ from matrix import Matrix
 
 botlist = [[Bolbot, "Bolbot", "standard"]]
 matrix = Matrix()
-matrix.run_sim(10, botlist, 10000)
+matrix.run_sim(10, botlist, 5000)
 
 print(matrix.name)
