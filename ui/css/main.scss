@@ -1,17 +1,51 @@
-body {
-  background: white;
+body{
+    height: 100%;
+    margin: 0;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-image: linear-gradient(rgb(1, 24, 1),rgb(44, 3, 3));
 }
 
-.titlebar {
-  color: crimson;
-  .logo {
-    font-size: 50px;
-    font-weight: bold;
-    background: chocolate;
-  }
-
-  .container {
+.header {
     text-align: center;
-    width: 10em;
-  }
+    padding: 1em;
+    a {
+        text-decoration: none;
+        padding: 0.5em;
+        color: rgb(238, 234, 234);
+        background: rgb(22, 20, 104);
+        font-weight: bolder;
+        border-radius: 1em;
+        border: solid grey;
+
+    }
+    span{
+        color: red;
+
+    }
+}
+
+.intro {
+    padding: 5em;
+    color: rgb(192, 189, 189);
+    text-align: center;
+}
+
+.go-btn {
+    text-align: center;
+    a{
+        text-decoration: none;
+        padding: 0.5em;
+        color: rgb(216, 216, 216);
+        background: rgb(22, 20, 104);
+        font-weight: bolder;
+        border-radius: 1em;
+        border: solid grey;
+    }
+}
+
+.display-text{
+    width: 50%;
+    height: 50%;
+    background: gray;
 }

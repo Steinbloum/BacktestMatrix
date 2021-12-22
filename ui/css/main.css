@@ -1,19 +1,54 @@
 body {
-  background: white;
+  height: 100%;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#011801), to(#2c0303));
+  background-image: linear-gradient(#011801, #2c0303);
 }
 
-.titlebar {
-  color: crimson;
-}
-
-.titlebar .logo {
-  font-size: 50px;
-  font-weight: bold;
-  background: chocolate;
-}
-
-.titlebar .container {
+.header {
   text-align: center;
-  width: 10em;
+  padding: 1em;
+}
+
+.header a {
+  text-decoration: none;
+  padding: 0.5em;
+  color: #eeeaea;
+  background: #161468;
+  font-weight: bolder;
+  border-radius: 1em;
+  border: solid grey;
+}
+
+.header span {
+  color: red;
+}
+
+.intro {
+  padding: 5em;
+  color: #c0bdbd;
+  text-align: center;
+}
+
+.go-btn {
+  text-align: center;
+}
+
+.go-btn a {
+  text-decoration: none;
+  padding: 0.5em;
+  color: #d8d8d8;
+  background: #161468;
+  font-weight: bolder;
+  border-radius: 1em;
+  border: solid grey;
+}
+
+.display-text {
+  width: 50%;
+  height: 50%;
+  background: gray;
 }
 /*# sourceMappingURL=main.css.map */
