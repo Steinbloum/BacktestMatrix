@@ -1,0 +1,19 @@
+body {
+  background: white;
+}
+
+.titlebar {
+  color: crimson;
+}
+
+.titlebar .logo {
+  font-size: 50px;
+  font-weight: bold;
+  background: chocolate;
+}
+
+.titlebar .container {
+  text-align: center;
+  width: 10em;
+}
+/*# sourceMappingURL=main.css.map */

@@ -1,0 +1,17 @@
+body {
+  background: white;
+}
+
+.titlebar {
+  color: crimson;
+  .logo {
+    font-size: 50px;
+    font-weight: bold;
+    background: chocolate;
+  }
+
+  .container {
+    text-align: center;
+    width: 10em;
+  }
+}
